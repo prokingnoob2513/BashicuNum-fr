@@ -11,9 +11,15 @@ let maxDirectNum = BashicuNumber(1)
 let two = one.add(one)
 let ten = one.pow10()
 console.log(ten.toString())
+
+let n_one = BashicuNumber(-1)
+console.log(n_one.toString())
+console.log(n_one.format())
 ```
 ```
-BashicuNumber { matrix: (0), value: 1 }
+BashicuNumber { sign: 1, matrix: (0), value: 1 }
+BashicuNumber { sign: -1, matrix: (), value: 1 }
+-1.000
 ```
 
 sample usage can be found in [`./test.js`](./test.js)
