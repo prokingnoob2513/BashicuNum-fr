@@ -1,3 +1,6 @@
+// CONFIG
+let DecimalPlaces = 3 // Used for formatting numbers
+
 export class Column {
     #array; // this.array - Int[]
     #height; // Int - normally when dealing with BMS matrices height is standardized across all columns, so it helps to have an explicit height
@@ -202,6 +205,13 @@ export class Matrix {
         return new Matrix(newCols);
     }
 
+    /* returns the predecessor matrix of the current matrix
+    predecessor() {
+        const newCol = new Column(new Array(this.rows).pop(0));
+        const newCols = this.#columns.concat([newCol]);
+        return new Matrix(newCols);
+    }*/
+
     // returns whether or not the current matrix is a successor matrix (true) or a limit matrix instead (false)
     isSuccessor() {
         const lastCol = this.#columns.at(-1);
@@ -305,19 +315,26 @@ const THREE_MATRIX = new Matrix([[0], [0], [0]]);
 //
 // the system is set up in a way that all normalized BashicuNumber matrices are successor matrices rather than limit matrices (I think)
 export class BashicuNumber {
-    #matrix;
-    #value;
+    #sign; // 1 = positive, 0 = zero, -1 = negative
+    #matrix; // BMS matrix
+    #value; // number
     constructor(arg1, arg2) {
+        // If 1 args: [type] to BashicuNum
         if (typeof arg1 == "number") {
             if (arg1 > Number.MAX_SAFE_INTEGER) {
                 throw new Error(`BashicuNumber() cannot accept numbers above ${Number.MAX_SAFE_INTEGER}`);
             }
 
+            this.#sign = Math.sign(arg1)
             this.#matrix = new Matrix([]);
-            this.#value = arg1;
+            this.#value = Math.abs(arg1);
             this.normalize();
             return;
+        } else if (typeof arg1 == "string") {
+            throw new Error(`BashicuNumber() cannot accept strings, might implement this later`);
         }
+
+        // If 2 args: [matrix] and [value]
         if (typeof arg2 != "number") return; // error?
         if (typeof arg2 == "number") {
             if (arg2 > Number.MAX_SAFE_INTEGER) {
@@ -331,8 +348,9 @@ export class BashicuNumber {
                 matrix = arg1;
             } else return; // error?
 
+            this.#sign = Math.sign(arg2);
             this.#matrix = matrix;
-            this.#value = arg2;
+            this.#value = Math.abs(arg2);
 
             this.normalize();
         }
@@ -349,17 +367,51 @@ export class BashicuNumber {
             this.#value = n + Math.log10(this.#value);
             this.normalize();
         }
+        // n < 1
     }
     normalize() {
         while (this.#value >= 10) {
             this.#value = Math.log10(this.#value);
             this.#matrix = this.#matrix.successor();
         }
+        while (this.#value < 1) {
+            this.#value = Math.pow(10, this.#value);
+            //this.#matrix = this.#matrix.predecessor();
+            //predecessor() function at line 208 (unfinished function)
+        }
         this.normalizeMatrix();
     }
 
     toString() {
-        return `BashicuNumber { matrix: ${this.#matrix.toString()}, value: ${this.#value} }`;
+        return `BashicuNumber { sign: ${this.#sign}, matrix: ${this.#matrix.toString()}, value: ${this.#value} }`;
+    }
+
+    format() {
+        // Displays numbers yeah
+        let negativeNeeded = this.#sign == -1 ? "-" : ""
+
+        if (this.#matrix.eq(ZERO_MATRIX)) {
+            // 1 - 9.99
+            return negativeNeeded + this.#value.toFixed(DecimalPlaces)
+        } else if (this.#matrix.eq(ONE_MATRIX)) {
+            // 10 - 9.99e9
+            return negativeNeeded + (10**this.#value).toFixed(DecimalPlaces)
+        } else if (this.#matrix.eq(TWO_MATRIX)) {
+            // 1e10 - e9.99e9
+            let r = 10**(this.#value)
+            let fr = Math.floor(r) // integer
+            let d = r - fr // fraction
+            return negativeNeeded + `${(10**d).toFixed(DecimalPlaces)}e${fr}`
+        } else if (this.#matrix.eq(THREE_MATRIX)) {
+            // e1e10 - ee9.99e9
+            // just copy-pasting at this point
+            let r = 10**(this.#value)
+            let fr = Math.floor(r) // integer
+            let d = r - fr // fraction
+            return negativeNeeded + `e${(10**d).toFixed(DecimalPlaces)}e${fr}`
+        }
+        // out of range (ee1e10+)
+        return negativeNeeded + "ee1e10+"
     }
 
     // compares this matrix to another BashicuNumber n
@@ -367,6 +419,10 @@ export class BashicuNumber {
     // 0 if this == n
     // +1 if this > n
     cmp(n) {
+        if (typeof n == "number") n = new BashicuNumber(n);
+
+        if (this.#sign < n.#sign) return -1;
+        if (this.#sign > n.#sign) return 1;
         if (this.#matrix.lt(n.#matrix)) return -1;
         if (this.#matrix.gt(n.#matrix)) return 1;
         if (this.#value < n.#value) return -1;
@@ -399,6 +455,8 @@ export class BashicuNumber {
 
     add(n) {
         let a, b; // a > b
+        
+        if (typeof n == "number") n = new BashicuNumber(n);
         if (this.lt(n)) {
             a = n;
             b = this;
@@ -416,19 +474,19 @@ export class BashicuNumber {
         }
 
         if (amatrix.eq(ZERO_MATRIX) && bmatrix.eq(ZERO_MATRIX)) {
-            let newValue = a.#value + b.#value;
+            let newValue = a.#value * a.#sign + b.#value * b.#sign;
             // if (newValue < 10)
             return new BashicuNumber([], newValue);
             // else return new BashicuNumber([[0]], Math.log(newValue));
         }
 
         if (amatrix.eq(ONE_MATRIX) && bmatrix.eq(ZERO_MATRIX)) {
-            let newValue = Math.pow(10, a.#value) + b.#value;
+            let newValue = Math.pow(10, a.#value) * a.#sign + b.#value * b.#sign;
             return new BashicuNumber([], newValue);
         }
 
         if (amatrix.eq(ONE_MATRIX) && bmatrix.eq(ONE_MATRIX)) {
-            let newValue = Math.pow(10, a.#value) + Math.pow(10, b.#value);
+            let newValue = Math.pow(10, a.#value) * a.#sign + Math.pow(10, b.#value) * b.#sign;
             return new BashicuNumber([], newValue);
         }
 

@@ -138,6 +138,7 @@ function bashicuNumTest() {
     try {
         let one = new BashicuNumber(1);
         let big = new BashicuNumber(9e15);
+        let n_one = new BashicuNumber(-1);
 
         console.assert(one.matrix.toString() == "()", `❌ one.matrix is ${one.matrix.toString()} instead of ()`);
         console.assert(one.value === 1, `❌ one.value is ${one.value} instead of 1`);
@@ -146,9 +147,14 @@ function bashicuNumTest() {
             `❌ big.matrix is ${one.matrix.toString()} instead of (0)(0)`,
         );
 
+        console.assert(n_one.sign == -1, `❌ n_one sign is ${n_one.sign} instead of -1`);
+    
         let two = one.add(one);
         console.assert(two.matrix.toString() == "()", `❌ two.matrix is ${two.matrix.toString()} instead of ()`);
         console.assert(two.value == 2, `❌ two.value is ${two.value} instead of 2`);
+
+        let zero = n_one.add(1)
+        console.assert(zero.value == 0 || zero.sign == 0, `❌ zero sign, value is ${zero.sign}, ${zero.value} instead of 0, 0`);
 
         let ten = two.add(one).add(one).add(one).add(one).add(one).add(one).add(one).add(one);
         console.assert(ten.matrix.toString() == "(0)", `❌ ten.matrix is ${ten.matrix.toString()} instead of (0)`);
@@ -173,6 +179,11 @@ function bashicuNumTest() {
         );
         console.assert(tentenpow10.value == 1, `❌ tentenpow10.value is ${tentenpow10.value} instead of 1`);
 
+        console.log(one.format());
+        console.log(ten.format());
+        console.log(big.format());
+        console.log(n_one.format());
+        
         console.log(tenten.toString());
         console.log(tentenpow10.toString());
         let tenten2 = tentenpow10.log10();
