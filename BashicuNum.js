@@ -370,6 +370,17 @@ export class BashicuNumber {
         // n < 1
     }
     normalize() {
+        if (this.#value < 0) {
+            this.#value = Math.abs(this.#value)
+
+            // invert sign
+            this.#sign *= -1
+        }
+        if (this.#sign == 0) {
+            // zero
+            this.#value = 0
+        }
+
         while (this.#value >= 10) {
             this.#value = Math.log10(this.#value);
             this.#matrix = this.#matrix.successor();
@@ -420,13 +431,19 @@ export class BashicuNumber {
     // +1 if this > n
     cmp(n) {
         if (typeof n == "number") n = new BashicuNumber(n);
-
+        
         if (this.#sign < n.#sign) return -1;
         if (this.#sign > n.#sign) return 1;
-        if (this.#matrix.lt(n.#matrix)) return -1;
-        if (this.#matrix.gt(n.#matrix)) return 1;
-        if (this.#value < n.#value) return -1;
-        if (this.#value > n.#value) return 1;
+
+        // When both BashicuNums are negative, the BashicuNum with a larger matrix would be a smaller number
+        // 1 is false, -1 is true
+        let bothAreNegative = 1;
+        if (this.#sign == -1 && n.#sign == -1) bothAreNegative = -1;
+
+        if (this.#matrix.lt(n.#matrix)) return -1 * bothAreNegative;
+        if (this.#matrix.gt(n.#matrix)) return 1 * bothAreNegative;
+        if (this.#value < n.#value) return -1 * bothAreNegative;
+        if (this.#value > n.#value) return 1 * bothAreNegative;
         return 0; // equal
     }
     lt(n) {

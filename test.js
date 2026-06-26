@@ -136,6 +136,7 @@ matrixTest();
 function bashicuNumTest() {
     console.log("Testing BashicuNum class... (If no ❌s appear then its all good)");
     try {
+        // Calculation
         let one = new BashicuNumber(1);
         let big = new BashicuNumber(9e15);
         let n_one = new BashicuNumber(-1);
@@ -155,6 +156,10 @@ function bashicuNumTest() {
 
         let zero = n_one.add(1)
         console.assert(zero.value == 0 || zero.sign == 0, `❌ zero sign, value is ${zero.sign}, ${zero.value} instead of 0, 0`);
+
+        let n_two = new BashicuNumber(-2);
+        let n_three = n_one.add(n_two);
+        console.assert(n_three.sign == -1, `❌ n_three.sign is ${n_three.sign} instead of -1`);
 
         let ten = two.add(one).add(one).add(one).add(one).add(one).add(one).add(one).add(one);
         console.assert(ten.matrix.toString() == "(0)", `❌ ten.matrix is ${ten.matrix.toString()} instead of (0)`);
@@ -188,6 +193,11 @@ function bashicuNumTest() {
         console.log(tentenpow10.toString());
         let tenten2 = tentenpow10.log10();
         console.log(tenten2.toString());
+
+        // Comparison
+        console.assert(one.cmp(big) == -1, `❌ one isn't smaller than big`);
+        console.assert(n_one.cmp(big) == -1, `❌ n_one isn't smaller than big`);
+        console.assert(n_one.cmp(n_two) == 1, `❌ n_one isn't bigger than n_two`);
     } catch (e) {
         console.error(e);
     }
