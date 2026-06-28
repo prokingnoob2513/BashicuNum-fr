@@ -372,9 +372,7 @@ export class BashicuNumber {
     normalize() {
         if (this.#value < 0) {
             this.#value = Math.abs(this.#value)
-
-            // invert sign
-            this.#sign *= -1
+            this.#sign *= -1 // invert sign
         }
         if (this.#sign == 0) {
             // zero
@@ -385,7 +383,7 @@ export class BashicuNumber {
             this.#value = Math.log10(this.#value);
             this.#matrix = this.#matrix.successor();
         }
-        while (this.#value < 1) {
+        while (this.#value < 1 && this.value != 0) {
             this.#value = Math.pow(10, this.#value);
             //this.#matrix = this.#matrix.predecessor();
             //predecessor() function at line 208 (unfinished function)
